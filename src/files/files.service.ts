@@ -4,12 +4,14 @@ import filesConfig from 'src/config/filesConfig';
 import { ConfigType } from '@nestjs/config';
 
 import * as AWS from 'aws-sdk';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class FilesService {
   constructor(
     @Inject(filesConfig.KEY)
     readonly config: ConfigType<typeof filesConfig>,
+    private prisma: PrismaService,
   ) {}
   async uploadFile(file: Express.Multer.File) {
     //aws에 접근하기 위한 정보 및 액세스 키 등록
@@ -34,7 +36,11 @@ export class FilesService {
 
     //업로드 시도
     try {
-      await upload.upload(params).promise();
+      const response = await upload.upload(params).promise();
+      const [filename, _] = response.Key.split('.');
+      return this.prisma.insuranceLogo.create({
+        data: { filename, imageUrl: response.Location },
+      });
     } catch (e) {
       throw new Error('Failed to upload file.');
     }
