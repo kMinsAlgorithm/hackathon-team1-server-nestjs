@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  directUrl         = env("DIRECT_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model InsuranceLogo {
+  imageUrl   String
+  filename   String
+  logoId     String          @id @default(uuid())
+  insurances InsuranceInfo[]
+}
+
+model InsuranceInfo {
+  infoId          String        @id @default(uuid())
+  insuranceLogoId String        @map("logoId")
+  insuranceName   String
+  insuranceLogo   InsuranceLogo @relation(fields: [insuranceLogoId], references: [logoId])
+}

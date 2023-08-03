@@ -1,0 +1,7 @@
+-- CreateTable
+CREATE TABLE "INSURANCE_LOGO" (
+    "id" SERIAL NOT NULL,
+    "imageUrl" TEXT NOT NULL,
+
+    CONSTRAINT "INSURANCE_LOGO_pkey" PRIMARY KEY ("id")
+);
