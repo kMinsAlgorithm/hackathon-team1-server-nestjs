@@ -3,7 +3,7 @@ import { InsuranceSuggestersService } from './insurance-suggesters.service';
 import { InsuranceSuggesterDto } from './dto/insurance-suggester.dto';
 import { FindManyInsuracesInfoDto } from './dto/find-many-insurances.dto';
 import { FindOneInsuracesInfoDto } from './dto/find-one-insurances.dto';
-import { CreateInsuraceDto } from './dto/create-insurance.dto';
+import { CreateInsuranceDto } from './dto/create-insurance.dto';
 
 @Controller('insurance-suggesters')
 export class InsuranceSuggestersController {
@@ -21,7 +21,7 @@ export class InsuranceSuggestersController {
   }
 
   @Post('create')
-  async createInsurance(@Body() createInsuranceDto: CreateInsuraceDto) {
+  async createInsurance(@Body() createInsuranceDto: CreateInsuranceDto) {
     return this.insuranceSuggestersService.createInsurance(createInsuranceDto);
   }
 
@@ -42,5 +42,10 @@ export class InsuranceSuggestersController {
   @Get('/all')
   async findAllInsurance() {
     return this.insuranceSuggestersService.findAllInsurance();
+  }
+
+  @Post('/delete-insurances')
+  async deleteInsurances() {
+    return this.insuranceSuggestersService.deleteInsurances();
   }
 }

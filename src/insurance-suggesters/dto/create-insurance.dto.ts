@@ -4,6 +4,8 @@ export class CreateInsuranceDto {
   readonly insuranceName: string;
   readonly premiumMale: number;
   readonly premiumFemale: number;
+  readonly insuranceAgeGroupStart: number;
+  readonly insuranceAgeGroupEnd: number;
   readonly insuranceAgeGroup: number;
   readonly companyName: string;
   readonly productName: string;
@@ -17,5 +19,5 @@ export class CreateInsuranceDto {
   readonly depositorProtection: number;
   readonly guaranteeInsurance: boolean;
   readonly actualLossCoverage: boolean;
-  readonly fixedInterestRate: boolean;
+  readonly fixedInterestRate: boolean = false;
 }

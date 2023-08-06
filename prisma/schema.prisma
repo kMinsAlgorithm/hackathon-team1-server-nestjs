@@ -17,26 +17,27 @@ model InsuranceLogo {
 }
 
 model InsuranceInfo {
-  infoId              String        @id @default(uuid())
-  insuranceLogoId     String        @map("logoId")
-  premiumMale         Int
-  premiumFemale       Int
-  insuranceAgeGroup   Int
-  companyName         String
-  productName         String
-  insuranceName       String
-  insuranceType       InsuranceType
-  registrationType    String?      
-  registrationLink    String?
-  premiumRenewable    Boolean
-  cancellationRefund  Int
-  cancellationPeriod  Int
-  priceIndex          Float
-  depositorProtection Int
-  guaranteeInsurance  Boolean
-  actualLossCoverage  Boolean
-  fixedInterestRate   Boolean       @default(false)
-  insuranceLogo       InsuranceLogo @relation(fields: [insuranceLogoId], references: [logoId])
+  infoId                  String        @id @default(uuid())
+  insuranceLogoId         String        @map("logoId")
+  premiumMale             Int
+  premiumFemale           Int
+  insuranceAgeGroupStart  Int
+  insuranceAgeGroupEnd    Int
+  insuranceAgeGroup       Int
+  companyName             String
+  productName             String
+  insuranceType           InsuranceType
+  registrationType        String?      
+  registrationLink        String?
+  premiumRenewable        Boolean
+  cancellationRefund      Int
+  cancellationPeriod      Int
+  priceIndex              Float?
+  depositorProtection     Int
+  guaranteeInsurance      Boolean
+  actualLossCoverage      Boolean
+  fixedInterestRate       Boolean       @default(false)
+  insuranceLogo           InsuranceLogo @relation(fields: [insuranceLogoId], references: [logoId])
 }
 
 enum InsuranceType {
