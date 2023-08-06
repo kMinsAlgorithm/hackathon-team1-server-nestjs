@@ -7,7 +7,8 @@ import { InsuranceSuggesterDto } from './dto/insurance-suggester.dto';
 import { TranslateService } from 'src/translate/translate.service';
 import { FindManyInsuracesInfoDto } from './dto/find-many-insurances.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateInsuraceDto } from './dto/create-insurance.dto';
+import { CreateInsuranceDto } from './dto/create-insurance.dto';
+import axios from 'axios';
 
 @Injectable()
 export class InsuranceSuggestersService {
@@ -25,14 +26,58 @@ export class InsuranceSuggestersService {
       question,
     );
     // 해당 텍스트로 추천 기능 요청하는 기능은 추후 개발 예정입니다.
+
     return translatedText;
   }
 
-  async createInsurance(createInsurance: CreateInsuraceDto) {
-    const { insuranceName, insuranceLogoId } = createInsurance;
+  async createInsurance(createInsuranceDto: CreateInsuranceDto) {
+    const {
+      insuranceName,
+      premiumMale,
+      premiumFemale,
+      insuranceAgeGroup,
+      companyName,
+      productName,
+      insuranceType,
+      registrationType,
+      registrationLink,
+      premiumRenewable,
+      cancellationRefund,
+      cancellationPeriod,
+      priceIndex,
+      depositorProtection,
+      guaranteeInsurance,
+      actualLossCoverage,
+      fixedInterestRate,
+    } = createInsuranceDto;
+
+    //보험 로고 검색
+    const insuranceLogo = await this.prisma.insuranceLogo.findUnique({
+      where: { filename: companyName },
+    });
+
     try {
       const insurance = await this.prisma.insuranceInfo.create({
-        data: { insuranceName, insuranceLogoId },
+        data: {
+          insuranceName,
+          premiumMale,
+          premiumFemale,
+          insuranceAgeGroup,
+          companyName,
+          productName,
+          insuranceType,
+          registrationType,
+          registrationLink,
+          premiumRenewable,
+          cancellationRefund,
+          cancellationPeriod,
+          priceIndex,
+          depositorProtection,
+          guaranteeInsurance,
+          actualLossCoverage,
+          fixedInterestRate,
+          insuranceLogo: { connect: { logoId: insuranceLogo.logoId } },
+        },
       });
       return insurance;
     } catch (error) {
