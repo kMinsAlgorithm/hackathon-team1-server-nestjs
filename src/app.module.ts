@@ -7,12 +7,13 @@ import { PrismaModule } from './prisma/prisma.module';
 import translateConfig from './config/translateConfig';
 import filesConfig from './config/filesConfig';
 import { ThrottlerModule } from '@nestjs/throttler';
+import insuranceConfig from './config/insuranceConfig';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [translateConfig, filesConfig],
+      load: [translateConfig, filesConfig, insuranceConfig],
     }),
     ThrottlerModule.forRoot({
       ttl: 60,

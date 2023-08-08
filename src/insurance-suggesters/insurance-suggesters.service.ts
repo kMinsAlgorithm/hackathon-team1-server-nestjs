@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,10 +10,14 @@ import { FindManyInsuracesInfoDto } from './dto/find-many-insurances.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateInsuranceDto } from './dto/create-insurance.dto';
 import axios from 'axios';
+import insuranceConfig from 'src/config/insuranceConfig';
+import { ConfigType } from '@nestjs/config';
 
 @Injectable()
 export class InsuranceSuggestersService {
   constructor(
+    @Inject(insuranceConfig.KEY)
+    readonly config: ConfigType<typeof insuranceConfig>,
     private readonly translateService: TranslateService,
     private readonly prisma: PrismaService,
   ) {}
@@ -31,20 +36,26 @@ export class InsuranceSuggestersService {
       text: translatedText.message.result.translatedText,
     };
     // 해당 텍스트로 추천 기능 요청하는 기능은 추후 개발 예정입니다.
-    const response = await axios.post(
-      'http://127.0.0.1:8000/recommendations',
-      insuranceQuestions,
-    );
+    try {
+      const response = await axios.post(
+        this.config.recommendationUrl,
+        insuranceQuestions,
+      );
 
-    const insuranceIds = response.data;
-    const insurances = await this.findManyInsurance({ insuranceIds });
+      const insuranceIds = response.data;
+      const insurances = await this.findManyInsurance({ insuranceIds });
 
-    const insuranceSearchResults = {
-      question,
-      insurances,
-    };
+      const insuranceSearchResults = {
+        question,
+        insurances,
+      };
 
-    return insuranceSearchResults;
+      return insuranceSearchResults;
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to request question: ${error.message}`,
+      );
+    }
   }
 
   async createInsurance(createInsuranceDto: CreateInsuranceDto) {
@@ -69,7 +80,7 @@ export class InsuranceSuggestersService {
       fixedInterestRate,
     } = createInsuranceDto;
 
-    const a: { [key: string]: string } = {
+    const INSURANCE_KEY_VALUE_OBJECT: { [key: string]: string } = {
       'DB 손해보험': 'b2739430-38d0-4177-900e-8cd5e20a1d87',
       DB생명: '4f0bfd7e-0777-4ee1-aa8a-ab8904ae1c74',
       'MG 손해보험': '653c002b-8760-4e7b-b0f3-c13b79240a5b',
@@ -90,8 +101,8 @@ export class InsuranceSuggestersService {
 
     // 보험사 이름으로 이미지 URL을 찾는 함수 원래 보험사 이름으로 db에서 검색하려고 했는데 안되더라구요?
     function findImageUrlByCompanyName(companyName: string): string {
-      if (a.hasOwnProperty(companyName)) {
-        return a[companyName];
+      if (INSURANCE_KEY_VALUE_OBJECT.hasOwnProperty(companyName)) {
+        return INSURANCE_KEY_VALUE_OBJECT[companyName];
       } else {
         return '이미지 URL을 찾을 수 없습니다.';
       }
@@ -101,7 +112,6 @@ export class InsuranceSuggestersService {
     });
 
     try {
-      console.log('db입력시작');
       const insurance = await this.prisma.insuranceInfo.create({
         data: {
           premiumMale,
@@ -125,10 +135,8 @@ export class InsuranceSuggestersService {
           insuranceLogo: { connect: { logoId: insuranceLogo.logoId } },
         },
       });
-      console.log('db입력끝');
       return insurance;
     } catch (error) {
-      console.log(error);
       throw new BadRequestException(
         `Failed to create insurance: ${error.message}`,
       );
