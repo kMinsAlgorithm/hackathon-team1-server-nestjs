@@ -1,17 +1,20 @@
-# declare base image - node 18.13.0
-FROM node:18-alpine AS builder
+FROM node:18.16.0-alpine AS INSTALLER
 
-# make work directory and copy files
-WORKDIR /app
+WORKDIR /usr/src/app
+COPY package.json yarn.lock ./
+
+RUN yarn global add @nestjs/cli
+
 COPY . .
 
-# project dependency install
-RUN yarn
-RUN yarn run build
+RUN yarn --prod
 
-FROM node:18-alpine
+RUN yarn build
+
+FROM node:18.16.0-alpine
+
 WORKDIR /usr/src/app
-COPY --from=builder /app ./
 
-EXPOSE 3000
-CMD yarn start:prod
+COPY --from=INSTALLER /usr/src/app .
+
+CMD ["node", "dist/main.js"]
