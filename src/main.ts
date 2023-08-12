@@ -6,7 +6,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.enableCors({
     // origin: new RegExp(process.env.CORS_WHITELIST_REGEX),
-    origin: 'http://localhost:3000/',
+    origin: 'http://localhost:3000',
   });
   await app.listen(3000);
 }
