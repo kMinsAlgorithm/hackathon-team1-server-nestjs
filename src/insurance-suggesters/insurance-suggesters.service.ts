@@ -24,16 +24,26 @@ export class InsuranceSuggestersService {
 
   async insuranceSuggest(insuranceSuggesterDto: InsuranceSuggesterDto) {
     const { question, sourceLanguage } = insuranceSuggesterDto;
+    let questionText = '';
     const targetLanguage = 'en';
 
-    const translatedText = await this.translateService.translate(
-      sourceLanguage,
-      targetLanguage,
-      question,
-    );
+    if (sourceLanguage == 'en') {
+      questionText = question;
+    } else if (sourceLanguage == 'ko' || sourceLanguage == 'zh-CN') {
+      const translatedText = await this.translateService.translate(
+        sourceLanguage,
+        targetLanguage,
+        question,
+      );
+      questionText = translatedText.message.result.translatedText;
+    } else {
+      throw new BadRequestException(
+        `${sourceLanguage}는 지원하지 않는 언어입니다.`,
+      );
+    }
 
     const insuranceQuestions = {
-      text: translatedText.message.result.translatedText,
+      text: questionText,
     };
     // 해당 텍스트로 추천 기능 요청하는 기능은 추후 개발 예정입니다.
     try {
