@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import translateConfig from './config/translateConfig';
 import filesConfig from './config/filesConfig';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { FilteringModule } from './filtering/filtering.module';
 import insuranceConfig from './config/insuranceConfig';
 
 @Module({
@@ -22,6 +23,7 @@ import insuranceConfig from './config/insuranceConfig';
     PrismaModule,
     TranslateModule,
     InsuranceSuggestersModule,
+    FilteringModule,
     FilesModule,
   ],
   controllers: [],

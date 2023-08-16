@@ -13,6 +13,9 @@ import axios from 'axios';
 import insuranceConfig from 'src/config/insuranceConfig';
 import { ConfigType } from '@nestjs/config';
 import { INSURANCE_LANGUAGE_OBJECT } from './data/insurance-language-versions.data';
+
+import { FilteringService } from 'src/filtering/filtering.service';
+
 @Injectable()
 export class InsuranceSuggestersService {
   constructor(
@@ -20,6 +23,7 @@ export class InsuranceSuggestersService {
     readonly config: ConfigType<typeof insuranceConfig>,
     private readonly translateService: TranslateService,
     private readonly prisma: PrismaService,
+    private readonly filteringService: FilteringService,
   ) {}
 
   private async add_language_version(
@@ -31,7 +35,6 @@ export class InsuranceSuggestersService {
       return null;
     }
   }
-
   async insuranceSuggest(insuranceSuggesterDto: InsuranceSuggesterDto) {
     const { question, sourceLanguage } = insuranceSuggesterDto;
     let questionText = '';
@@ -45,6 +48,7 @@ export class InsuranceSuggestersService {
         targetLanguage,
         question,
       );
+
       questionText = translatedText.message.result.translatedText;
     } else {
       throw new BadRequestException(
@@ -55,18 +59,19 @@ export class InsuranceSuggestersService {
     const insuranceQuestions = {
       text: questionText,
     };
-    // 해당 텍스트로 추천 기능 요청하는 기능은 추후 개발 예정입니다.
     try {
       const response = await axios.post(
         this.config.recommendationUrl,
         insuranceQuestions,
       );
-      const insuranceIds = response.data;
-      if (!insuranceIds) {
+      const insuranceTags =
+        await this.filteringService.mapResponseToInsuranceType(response.data);
+
+      const insurances = await this.filteringService.filtering(insuranceTags);
+
+      if (!insurances) {
         throw new NotFoundException('검색 결과가 없습니다.');
       }
-      const insurances = await this.findManyInsurance({ insuranceIds });
-
       const insuranceSearchResults = {
         question,
         insurances,
@@ -187,7 +192,9 @@ export class InsuranceSuggestersService {
     };
   }
 
-  async findManyInsurance(findManyInsuracesInfoDto: FindManyInsuracesInfoDto) {
+  async findManyByIdInsurance(
+    findManyInsuracesInfoDto: FindManyInsuracesInfoDto,
+  ) {
     try {
       const { insuranceIds } = findManyInsuracesInfoDto;
 

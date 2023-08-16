@@ -34,7 +34,7 @@ export class InsuranceSuggestersController {
   async findManyInsurance(
     @Body() findManyInsuracesInfoDto: FindManyInsuracesInfoDto,
   ) {
-    return this.insuranceSuggestersService.findManyInsurance(
+    return this.insuranceSuggestersService.findManyByIdInsurance(
       findManyInsuracesInfoDto,
     );
   }
