@@ -35,6 +35,7 @@ export class InsuranceSuggestersService {
       return null;
     }
   }
+
   async insuranceSuggest(insuranceSuggesterDto: InsuranceSuggesterDto) {
     const { question, sourceLanguage } = insuranceSuggesterDto;
     let questionText = '';
@@ -67,17 +68,22 @@ export class InsuranceSuggestersService {
       const insuranceTags =
         await this.filteringService.mapResponseToInsuranceType(response.data);
 
-      const insurances = await this.filteringService.filtering(insuranceTags);
+      const insuranceInfos = await this.filteringService.filtering(
+        insuranceTags,
+      );
 
-      if (!insurances) {
+      if (!insuranceInfos) {
         throw new NotFoundException('검색 결과가 없습니다.');
       }
       const insuranceSearchResults = {
-        question,
-        insurances,
+        insuranceInfos,
+        numberOfInsuranceInfos: insuranceInfos.length,
       };
 
-      return insuranceSearchResults;
+      return {
+        question,
+        insurances: insuranceSearchResults,
+      };
     } catch (error) {
       throw new BadRequestException(
         `Failed to request question: ${error.message}`,
