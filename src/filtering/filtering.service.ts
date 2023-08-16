@@ -97,10 +97,6 @@ export class FilteringService {
     // 2. 성별 나누기
 
     if (gender) {
-      where = {
-        ...where,
-        gender: gender,
-      };
     }
 
     // 3. 가입 방법 필터링
@@ -112,37 +108,131 @@ export class FilteringService {
       };
     }
     // 4. 이상 이하 범위 지정
-
     if (insurancePriceRangeIndex) {
+      const rangeConditions = [];
       for (const range of insurancePriceRangeIndex) {
-        if (range[1] === undefined) {
-          continue;
-        }
-        //이상이라면
-        if (range[0] === 'over') {
-          //range[1](age,price,priceIndex가 될수도 있음) 의 이상을 필터링
-        } else if (range[0] === 'less') {
-          //range[1](age,price,priceIndex가 될수도 있음) 의 이상을 필터링
-        } else if (range[0] === 'around') {
+        if (!range[1]) continue;
+
+        switch (range[1]) {
+          case 'price':
+            const priceField =
+              gender === 'man' ? 'premiumMale' : 'premiumFemale';
+
+            if (range[0] === 'over') {
+              rangeConditions.push({ [priceField]: { gte: price } });
+            } else if (range[0] === 'less') {
+              rangeConditions.push({ [priceField]: { lte: price } });
+            } else if (range[0] === 'around') {
+              rangeConditions.push({
+                [priceField]: { gte: price - 5000, lte: price + 5000 },
+              });
+            }
+            break;
+
+          case 'age':
+            if (range[0] === 'over') {
+              rangeConditions.push({ age: { gte: age } });
+            } else if (range[0] === 'less') {
+              rangeConditions.push({ age: { lte: age } });
+            } else if (range[0] === 'around') {
+              rangeConditions.push({ age: { gte: age - 5, lte: price + 5 } });
+            }
+            break;
+
+          case 'priceIndex':
+            if (range[0] === 'over') {
+              rangeConditions.push({ priceIndex: { gte: priceIndex } });
+            } else if (range[0] === 'less') {
+              rangeConditions.push({ priceIndex: { lte: priceIndex } });
+            } else if (range[0] === 'around') {
+              rangeConditions.push({
+                priceIndex: { gte: priceIndex - 5, lte: priceIndex + 5 },
+              });
+            }
+            break;
         }
       }
-      // 5. 최대 최소 범위 지정
-      if (questionTags.insurancePriceMinMaxIndex) {
-        console.log('최대 최소 범위');
+
+      if (rangeConditions.length) {
+        where = {
+          ...where,
+          OR: rangeConditions,
+        };
       }
-
-      const insuranceInfos = await this.prismaService.insuranceInfo.findMany({
-        where: where,
-        include: {
-          insuranceLogo: true,
-        },
-      });
-
-      // 필터링되고 남은 값을 리턴.
-      console.log(insuranceInfos);
-      //일단 이걸로
-      const filteringIds = ['6d63fb72-fe0a-4a45-8e16-5b61dbf586c1', ''];
-      return filteringIds;
     }
+
+    // 5. 최대 최소 범위 지정
+    if (insurancePriceMinMaxIndex) {
+      const minMaxConditions = [];
+
+      for (const range of insurancePriceMinMaxIndex) {
+        if (!range[1]) continue;
+
+        switch (range[1]) {
+          case 'price':
+            const priceField =
+              gender === 'man' ? 'premiumMale' : 'premiumFemale';
+
+            if (range[0] === 'max') {
+              minMaxConditions.push({ [priceField]: { lte: price } });
+            } else if (range[0] === 'min') {
+              minMaxConditions.push({ [priceField]: { gte: price } });
+            } else if (range[0] === 'mid') {
+              minMaxConditions.push({
+                [priceField]: {
+                  gte: price - price * 0.1,
+                  lte: price + price * 0.1,
+                },
+              });
+            }
+            break;
+
+          case 'age':
+            if (range[0] === 'max') {
+              minMaxConditions.push({ age: { lte: age } });
+            } else if (range[0] === 'min') {
+              minMaxConditions.push({ age: { gte: age } });
+            } else if (range[0] === 'mid') {
+              minMaxConditions.push({ age: { gte: age - 1, lte: age + 1 } });
+            }
+            break;
+
+          case 'priceIndex':
+            if (range[0] === 'max') {
+              minMaxConditions.push({ priceIndex: { gte: priceIndex } });
+            } else if (range[0] === 'min') {
+              minMaxConditions.push({ priceIndex: { lte: priceIndex } });
+            } else if (range[0] === 'mid') {
+              minMaxConditions.push({
+                priceIndex: { gte: priceIndex - 5, lte: priceIndex + 5 },
+              });
+            }
+            break;
+        }
+      }
+
+      if (minMaxConditions.length) {
+        where = {
+          ...where,
+          OR: minMaxConditions,
+        };
+      }
+    }
+
+    // 만약 insurancePriceMinMaxIndex, insurancePriceRangeIndex를 거치지 않은 age, price, priceIndex가 있다면
+    // 그 주변 범위의 값을 필터링
+
+    const insuranceInfos = await this.prismaService.insuranceInfo.findMany({
+      where: where,
+      include: {
+        insuranceLogo: true,
+      },
+    });
+
+    // 필터링되고 남은 값을 리턴.
+    console.log(insuranceInfos);
+    //일단 이걸로
+    const filteringIds = ['6d63fb72-fe0a-4a45-8e16-5b61dbf586c1', ''];
+    return filteringIds;
   }
 }
