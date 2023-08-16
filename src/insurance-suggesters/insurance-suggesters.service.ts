@@ -61,8 +61,10 @@ export class InsuranceSuggestersService {
         this.config.recommendationUrl,
         insuranceQuestions,
       );
-
       const insuranceIds = response.data;
+      if (!insuranceIds) {
+        throw new NotFoundException('검색 결과가 없습니다.');
+      }
       const insurances = await this.findManyInsurance({ insuranceIds });
 
       const insuranceSearchResults = {
