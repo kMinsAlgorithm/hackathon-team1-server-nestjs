@@ -78,7 +78,7 @@ export class InsuranceSuggestersService {
         );
 
       const insuranceIds = await this.filteringService.filtering(insuranceTags);
-      //일단 필터링하고 남은 결과가 없으면 에러를 발생시켜야 함.
+
       const insurances = await this.findManyInsurance({
         insuranceIds: insuranceIds,
       });
