@@ -8,7 +8,7 @@ async function bootstrap() {
     // origin: new RegExp(process.env.CORS_WHITELIST_REGEX),
     origin: [
       'http://localhost:3000',
-      'https://hackathon-team1-6n5652jde-hackathon-team1-web.vercel.app',
+      'https://hackathon-team1-web-k8ep.vercel.app',
     ],
   });
   await app.listen(3000);
