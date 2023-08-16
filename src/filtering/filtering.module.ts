@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { FilteringService } from './filtering.service';
 
 @Module({
-  controllers: [],
+  imports: [],
   providers: [FilteringService],
   exports: [FilteringService],
 })

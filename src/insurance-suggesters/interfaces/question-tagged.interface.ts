@@ -1,19 +1,19 @@
 export enum Company {
-  DB = 'DB Insurance',
-  MG = 'MG Insurance',
-  Hyundai_Fire = 'Hyundai Marine & Fire Insurance',
-  Kyobo = 'Kyobo Life Insurance',
-  NH_None_Life = 'Nonghyup Non-Life Insurance',
-  NH_Life = 'Nonghyup Life Insurance',
-  Dongyang = 'Dongyang Life Insurance',
-  Lotte = 'Lotte Non-Life Insurance',
-  Meritz = 'Meritz Fire & Marine Insurance',
-  Samsung_Life = 'Samsung Life Insurance',
-  Samsung_Fire = 'Samsung Fire & Marine Insurance',
-  Hanwha_None_Life = 'Hanwha Non-Life Insuranace',
-  Hanwha_Life = 'Hanwha Life Insurance',
-  Heunguk_Life = 'Heungkuk Life Insurance',
-  Heunguk_Fire = 'Heungkuk Fire & Marine Insurance',
+  'DB 손해보험' = 'DB Insurance', //DB생명도
+  'MG 손해보험' = 'MG Insurance',
+  '현대해상' = 'Hyundai Marine & Fire Insurance',
+  '교보생명' = 'Kyobo Life Insurance',
+  '농협 손해보험' = 'Nonghyup Non-Life Insurance',
+  '농협생명' = 'Nonghyup Life Insurance',
+  '동양생명' = 'Dongyang Life Insurance',
+  '롯데 손해보험' = 'Lotte Non-Life Insurance',
+  '메리츠화재' = 'Meritz Fire & Marine Insurance',
+  '삼성생명' = 'Samsung Life Insurance',
+  '삼성화재' = 'Samsung Fire & Marine Insurance',
+  '한화 손해보험' = 'Hanwha Non-Life Insuranace',
+  '한화생명' = 'Hanwha Life Insurance',
+  '흥국생명' = 'Heungkuk Life Insurance',
+  '흥국화재' = 'Heungkuk Fire & Marine Insurance',
 }
 
 export enum Gender {
@@ -35,7 +35,7 @@ export enum ValueType {
 }
 
 export enum PriceRangeType {
-  Under = 'under',
+  Over = 'over',
   Less = 'less',
   Around = 'around',
 }

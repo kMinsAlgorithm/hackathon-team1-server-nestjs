@@ -13,16 +13,7 @@ import axios from 'axios';
 import insuranceConfig from 'src/config/insuranceConfig';
 import { ConfigType } from '@nestjs/config';
 import { INSURANCE_LANGUAGE_OBJECT } from './data/insurance-language-versions.data';
-import {
-  Insurance,
-  Company,
-  Gender,
-  RegistrationType,
-  PriceRangeType,
-  ValueType,
-  PriceMinMaxType,
-  InsuranaceType,
-} from './interfaces/question-tagged.interface';
+
 import { FilteringService } from 'src/filtering/filtering.service';
 
 @Injectable()
@@ -79,7 +70,7 @@ export class InsuranceSuggestersService {
 
       const insuranceIds = await this.filteringService.filtering(insuranceTags);
 
-      const insurances = await this.findManyInsurance({
+      const insurances = await this.findManyByIdInsurance({
         insuranceIds: insuranceIds,
       });
       if (!insurances) {
@@ -205,7 +196,9 @@ export class InsuranceSuggestersService {
     };
   }
 
-  async findManyInsurance(findManyInsuracesInfoDto: FindManyInsuracesInfoDto) {
+  async findManyByIdInsurance(
+    findManyInsuracesInfoDto: FindManyInsuracesInfoDto,
+  ) {
     try {
       const { insuranceIds } = findManyInsuracesInfoDto;
 
