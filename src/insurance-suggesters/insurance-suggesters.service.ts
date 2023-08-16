@@ -75,8 +75,21 @@ export class InsuranceSuggestersService {
       if (!insuranceInfos) {
         throw new NotFoundException('검색 결과가 없습니다.');
       }
+
+      const insurancesWithLanguage = await Promise.all(
+        insuranceInfos.map(async (info) => {
+          const languageVersion = await this.add_language_version(
+            info.productName,
+          );
+          return {
+            ...info,
+            languages: languageVersion,
+          };
+        }),
+      );
+
       const insuranceSearchResults = {
-        insuranceInfos,
+        insuranceInfos: insurancesWithLanguage,
         numberOfInsuranceInfos: insuranceInfos.length,
       };
 
