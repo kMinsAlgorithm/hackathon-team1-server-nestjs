@@ -13,6 +13,18 @@ import axios from 'axios';
 import insuranceConfig from 'src/config/insuranceConfig';
 import { ConfigType } from '@nestjs/config';
 import { INSURANCE_LANGUAGE_OBJECT } from './data/insurance-language-versions.data';
+import {
+  Insurance,
+  Company,
+  Gender,
+  RegistrationType,
+  PriceRangeType,
+  ValueType,
+  PriceMinMaxType,
+  InsuranaceType,
+} from './interfaces/question-tagged.interface';
+import { FilteringService } from 'src/filtering/filtering.service';
+
 @Injectable()
 export class InsuranceSuggestersService {
   constructor(
@@ -20,6 +32,7 @@ export class InsuranceSuggestersService {
     readonly config: ConfigType<typeof insuranceConfig>,
     private readonly translateService: TranslateService,
     private readonly prisma: PrismaService,
+    private readonly filteringService: FilteringService,
   ) {}
 
   private async add_language_version(
@@ -31,7 +44,6 @@ export class InsuranceSuggestersService {
       return null;
     }
   }
-
   async insuranceSuggest(insuranceSuggesterDto: InsuranceSuggesterDto) {
     const { question, sourceLanguage } = insuranceSuggesterDto;
     let questionText = '';
@@ -55,18 +67,24 @@ export class InsuranceSuggestersService {
     const insuranceQuestions = {
       text: questionText,
     };
-    // 해당 텍스트로 추천 기능 요청하는 기능은 추후 개발 예정입니다.
     try {
-      const response = await axios.post(
-        this.config.recommendationUrl,
-        insuranceQuestions,
-      );
-      const insuranceIds = response.data;
-      if (!insuranceIds) {
+      const insuranceTags = await axios
+        .post(this.config.recommendationUrl, insuranceQuestions)
+        .then(
+          async (response) =>
+            await this.filteringService.mapResponseToInsuranceType(
+              response.data,
+            ),
+        );
+
+      const insuranceIds = await this.filteringService.filtering(insuranceTags);
+      //일단 필터링하고 남은 결과가 없으면 에러를 발생시켜야 함.
+      const insurances = await this.findManyInsurance({
+        insuranceIds: insuranceIds,
+      });
+      if (!insurances) {
         throw new NotFoundException('검색 결과가 없습니다.');
       }
-      const insurances = await this.findManyInsurance({ insuranceIds });
-
       const insuranceSearchResults = {
         question,
         insurances,
