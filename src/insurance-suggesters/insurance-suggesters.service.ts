@@ -12,7 +12,7 @@ import { CreateInsuranceDto } from './dto/create-insurance.dto';
 import axios from 'axios';
 import insuranceConfig from 'src/config/insuranceConfig';
 import { ConfigType } from '@nestjs/config';
-
+import { INSURANCE_LANGUAGE_OBJECT } from './data/insurance-language-versions.data';
 @Injectable()
 export class InsuranceSuggestersService {
   constructor(
@@ -21,6 +21,16 @@ export class InsuranceSuggestersService {
     private readonly translateService: TranslateService,
     private readonly prisma: PrismaService,
   ) {}
+
+  private async add_language_version(
+    productName: string,
+  ): Promise<{ [subKey: string]: { KR: string; CN: string; EN: string } }> {
+    if (INSURANCE_LANGUAGE_OBJECT.hasOwnProperty(productName)) {
+      return INSURANCE_LANGUAGE_OBJECT[productName];
+    } else {
+      return null;
+    }
+  }
 
   async insuranceSuggest(insuranceSuggesterDto: InsuranceSuggesterDto) {
     const { question, sourceLanguage } = insuranceSuggesterDto;
@@ -165,39 +175,56 @@ export class InsuranceSuggestersService {
         `Insurance with ID ${insuranceId} not found.`,
       );
     }
-    return insurance;
+
+    const languageVersion = await this.add_language_version(
+      insurance.productName,
+    );
+    return {
+      ...insurance,
+      languages: languageVersion,
+    };
   }
 
   async findManyInsurance(findManyInsuracesInfoDto: FindManyInsuracesInfoDto) {
-    const { insuranceIds } = findManyInsuracesInfoDto;
-    const insuranceInfos = await this.prisma.insuranceInfo.findMany({
-      where: {
-        infoId: { in: insuranceIds },
-      },
-      include: {
-        insuranceLogo: true, // Include the related insuranceLogo
-      },
-    });
+    try {
+      const { insuranceIds } = findManyInsuracesInfoDto;
 
-    // // 데이터베이스에서 가져온 객체의 키 값들
-    // const fetchedIds = insuranceInfos.map((info) => info.infoId);
+      const insuranceInfos = await this.prisma.insuranceInfo.findMany({
+        where: {
+          infoId: { in: insuranceIds },
+        },
+        include: {
+          insuranceLogo: true, // Include the related insuranceLogo
+        },
+      });
 
-    // // 존재하지 않는 키 값들 찾기
-    // const missingKeys = insuranceIds.filter(
-    //   (infoId) => !fetchedIds.includes(infoId),
-    // );
+      if (insuranceInfos.length === 0) {
+        throw new NotFoundException(
+          'No insurance information found for given IDs.',
+        );
+      }
 
-    // if (missingKeys.length > 0) {
-    //   throw new NotFoundException(
-    //     `Objects with keys [${missingKeys.join(', ')}] not found.`,
-    //   );
-    // }
+      const insurancesWithLanguage = await Promise.all(
+        insuranceInfos.map(async (info) => {
+          const languageVersion = await this.add_language_version(
+            info.productName,
+          );
+          return {
+            ...info,
+            languages: languageVersion,
+          };
+        }),
+      );
 
-    const insurances = {
-      insuranceInfos,
-      numberOfInsuranceInfos: insuranceInfos.length,
-    };
-    return insurances;
+      return {
+        insuranceInfos: insurancesWithLanguage,
+        numberOfInsuranceInfos: insurancesWithLanguage.length,
+      };
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to fetch insurance information: ${error.message}`,
+      );
+    }
   }
 
   async findAllInsurance() {
@@ -210,7 +237,19 @@ export class InsuranceSuggestersService {
       if (insuranceInfos.length === 0) {
         throw new NotFoundException('No insurance information found.');
       }
-      return insuranceInfos;
+
+      const insurancesWithLanguage = await Promise.all(
+        insuranceInfos.map(async (info) => {
+          const languageVersion = await this.add_language_version(
+            info.productName,
+          );
+          return {
+            ...info,
+            languages: languageVersion,
+          };
+        }),
+      );
+      return insurancesWithLanguage;
     } catch (error) {
       throw new BadRequestException(
         `Failed to fetch insurance information: ${error.message}`,
