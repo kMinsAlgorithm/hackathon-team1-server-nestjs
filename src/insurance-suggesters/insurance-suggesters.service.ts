@@ -48,6 +48,7 @@ export class InsuranceSuggestersService {
         targetLanguage,
         question,
       );
+
       questionText = translatedText.message.result.translatedText;
     } else {
       throw new BadRequestException(
@@ -59,20 +60,15 @@ export class InsuranceSuggestersService {
       text: questionText,
     };
     try {
-      const insuranceTags = await axios
-        .post(this.config.recommendationUrl, insuranceQuestions)
-        .then(
-          async (response) =>
-            await this.filteringService.mapResponseToInsuranceType(
-              response.data,
-            ),
-        );
+      const response = await axios.post(
+        this.config.recommendationUrl,
+        insuranceQuestions,
+      );
+      const insuranceTags =
+        await this.filteringService.mapResponseToInsuranceType(response.data);
 
-      const insuranceIds = await this.filteringService.filtering(insuranceTags);
+      const insurances = await this.filteringService.filtering(insuranceTags);
 
-      const insurances = await this.findManyByIdInsurance({
-        insuranceIds: insuranceIds,
-      });
       if (!insurances) {
         throw new NotFoundException('검색 결과가 없습니다.');
       }

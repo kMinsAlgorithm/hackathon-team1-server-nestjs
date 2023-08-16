@@ -29,18 +29,6 @@ export class FilteringService {
     return [rangeType, valueType];
   }
 
-  private async findManyByDict(dict) {
-    const insuranceInfos = await this.prismaService.insuranceInfo.findMany({
-      where: {
-        infoId: { in: dict },
-      },
-      include: {
-        insuranceLogo: true, // Include the related insuranceLogo
-      },
-    });
-    return insuranceInfos;
-  }
-
   async mapResponseToInsuranceType(data: Insurance): Promise<Insurance> {
     const matchedGenderKey = Object.keys(Gender).find(
       (key) => Gender[key as keyof typeof Gender] === data['Gender'],
@@ -52,8 +40,10 @@ export class FilteringService {
         data['Registration Type'],
     );
 
-    return {
-      companyName: data['Company Name'].map(this.mapCompanyName),
+    const tags = {
+      companyName: data['Company Name']
+        ? data['Company Name'].map(this.mapCompanyName)
+        : undefined,
       gender: matchedGenderKey
         ? Gender[matchedGenderKey as keyof typeof Gender]
         : undefined,
@@ -62,18 +52,24 @@ export class FilteringService {
             matchedRegistrationTypeKey as keyof typeof RegistrationType
           ]
         : undefined,
-      insurancePriceRangeIndex: data['Insurance Price Range Index'].map(
-        this.mapPriceRange,
-      ),
-      insuranceType:
-        InsuranaceType[data['Insurance Type'] as keyof typeof InsuranaceType],
-      age: data['Age'],
-      priceIndex: parseFloat(data['Price Index']),
-      price: parseFloat(data['Insurance Price'] ?? '0'),
+      insurancePriceRangeIndex: data['Insurance Price Range Index']
+        ? data['Insurance Price Range Index'].map(this.mapPriceRange)
+        : undefined,
+      insuranceType: data['Insurance Type']
+        ? InsuranaceType[data['Insurance Type'] as keyof typeof InsuranaceType]
+        : undefined,
+      age: data['Age'] ? data['Age'] : undefined,
+      priceIndex: data['Price Index']
+        ? parseFloat(data['Price Index'])
+        : undefined,
+      price: data['Insurance Price']
+        ? parseFloat(data['Insurance Price'])
+        : undefined,
     };
+    return tags;
   }
 
-  async filtering(data: Insurance): Promise<string[]> {
+  async filtering(data: Insurance) {
     const {
       companyName,
       gender,
@@ -87,16 +83,11 @@ export class FilteringService {
     let where = {};
     // 1. 보험 이름 조회
 
-    console.log(companyName);
     if (companyName) {
       where = {
         ...where,
         OR: companyName.map((name) => ({ companyName: name })),
       };
-    }
-    // 2. 성별 나누기
-
-    if (gender) {
     }
 
     // 3. 가입 방법 필터링
@@ -131,11 +122,13 @@ export class FilteringService {
 
           case 'age':
             if (range[0] === 'over') {
-              rangeConditions.push({ age: { gte: age } });
+              rangeConditions.push({ insuranceAgeGroup: { gte: age } });
             } else if (range[0] === 'less') {
-              rangeConditions.push({ age: { lte: age } });
+              rangeConditions.push({ insuranceAgeGroup: { lte: age } });
             } else if (range[0] === 'around') {
-              rangeConditions.push({ age: { gte: age - 5, lte: price + 5 } });
+              rangeConditions.push({
+                insuranceAgeGroup: { gte: age - 5, lte: price + 5 },
+              });
             }
             break;
 
@@ -189,19 +182,22 @@ export class FilteringService {
 
           case 'age':
             if (range[0] === 'max') {
-              minMaxConditions.push({ age: { lte: age } });
+              minMaxConditions.push({ insuranceAgeGroupEnd: { lte: age } });
             } else if (range[0] === 'min') {
-              minMaxConditions.push({ age: { gte: age } });
+              minMaxConditions.push({ insuranceAgeGroupStart: { gte: age } });
             } else if (range[0] === 'mid') {
-              minMaxConditions.push({ age: { gte: age - 1, lte: age + 1 } });
+              minMaxConditions.push({
+                insuranceAgeGroupStart: { gte: age - 1 },
+                insuranceAgeGroupEnd: { lte: age + 1 },
+              });
             }
             break;
 
           case 'priceIndex':
             if (range[0] === 'max') {
-              minMaxConditions.push({ priceIndex: { gte: priceIndex } });
-            } else if (range[0] === 'min') {
               minMaxConditions.push({ priceIndex: { lte: priceIndex } });
+            } else if (range[0] === 'min') {
+              minMaxConditions.push({ priceIndex: { gte: priceIndex } });
             } else if (range[0] === 'mid') {
               minMaxConditions.push({
                 priceIndex: { gte: priceIndex - 5, lte: priceIndex + 5 },
@@ -228,11 +224,6 @@ export class FilteringService {
         insuranceLogo: true,
       },
     });
-
-    // 필터링되고 남은 값을 리턴.
-    console.log(insuranceInfos);
-    //일단 이걸로
-    const filteringIds = ['6d63fb72-fe0a-4a45-8e16-5b61dbf586c1', ''];
-    return filteringIds;
+    return insuranceInfos;
   }
 }
