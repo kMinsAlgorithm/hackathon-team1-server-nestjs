@@ -202,7 +202,11 @@ export class InsuranceSuggestersService {
 
   async findAllInsurance() {
     try {
-      const insuranceInfos = await this.prisma.insuranceInfo.findMany();
+      const insuranceInfos = await this.prisma.insuranceInfo.findMany({
+        include: {
+          insuranceLogo: true, // Include the related insuranceLogo
+        },
+      });
       if (insuranceInfos.length === 0) {
         throw new NotFoundException('No insurance information found.');
       }
