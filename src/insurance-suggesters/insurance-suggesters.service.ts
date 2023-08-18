@@ -68,9 +68,8 @@ export class InsuranceSuggestersService {
       const insuranceTags =
         await this.filteringService.mapResponseToInsuranceType(response.data);
 
-      const insuranceInfos = await this.filteringService.filtering(
-        insuranceTags,
-      );
+      const { insuranceInfos, filtered } =
+        await this.filteringService.filtering(insuranceTags);
 
       if (!insuranceInfos) {
         throw new NotFoundException('검색 결과가 없습니다.');
@@ -95,6 +94,7 @@ export class InsuranceSuggestersService {
 
       return {
         question,
+        filtered,
         insurances: insuranceSearchResults,
       };
     } catch (error) {
