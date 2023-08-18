@@ -82,13 +82,14 @@ export class FilteringService {
     } = data;
     let where = {};
     const filteringList = [];
-
     const numerical_exists = {
       insurancePrice: NumericalExistsStatus.None,
       priceIndex: NumericalExistsStatus.None,
       age: NumericalExistsStatus.None,
     };
-
+    if (!gender) {
+      const genderNone = 'none';
+    }
     const priceField = gender === 'man' ? 'premiumMale' : 'premiumFemale';
 
     if (age) {
@@ -282,11 +283,16 @@ export class FilteringService {
     if (
       numerical_exists['insurancePrice'] === NumericalExistsStatus.NoneChecked
     ) {
-      numericalConditions.push({
-        insurancePrice: {
+      if (gender) {
+        numericalConditions.push({
           [priceField]: { gte: price - 5000, lte: price + 5000 },
-        },
-      });
+        });
+      } else {
+        numericalConditions.push({
+          premiumMale: { gte: price - 5000, lte: price + 5000 },
+        });
+      }
+
       filteringList.push(`보험가격 ${price}대`);
     }
 

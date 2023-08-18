@@ -1,7 +1,7 @@
 export enum Company {
   'DB 손해보험' = 'DB Insurance', //DB생명도
   'MG 손해보험' = 'MG Insurance',
-  '현대해상' = 'Hyundai Marine & Fire Insurance',
+  '현대 해상' = 'Hyundai Marine & Fire Insurance',
   '교보생명' = 'Kyobo Life Insurance',
   '농협 손해보험' = 'Nonghyup Non-Life Insurance',
   '농협생명' = 'Nonghyup Life Insurance',
