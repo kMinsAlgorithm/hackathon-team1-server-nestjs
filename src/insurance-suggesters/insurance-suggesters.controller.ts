@@ -45,8 +45,8 @@ export class InsuranceSuggestersController {
   }
 
   //이건 개발 끝나면 막으려고 합니다.
-  @Post('/admin/delete-insurances')
-  async deleteInsurances() {
-    return this.insuranceSuggestersService.deleteInsurances();
-  }
+  // @Post('/admin/delete-insurances')
+  // async deleteInsurances() {
+  //   return this.insuranceSuggestersService.deleteInsurances();
+  // }
 }
