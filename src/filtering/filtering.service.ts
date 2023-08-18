@@ -129,22 +129,29 @@ export class FilteringService {
 
     // 2. 가입 방법 필터링
     if (registrationType) {
+      const regist =
+        registrationType === 'online' ? '온라인가입' : '설계사 상담';
       where = {
         ...where,
-        registrationType: registrationType,
+        registrationType: regist,
       };
-      filteringList.push(`가입 방법: ${registrationType}`);
+      filteringList.push(`가입 방법: ${regist}`);
     }
     // 3. 이상 이하 범위 지정
     if (insurancePriceRangeIndex) {
+      console.log('hi');
       const rangeConditions = [];
+      console.log(insurancePriceRangeIndex);
       for (const range of insurancePriceRangeIndex) {
+        console.log(range);
         if (!range[1]) continue;
         switch (range[1]) {
           case 'price':
+            console.log(range[0]);
+
             if (gender) {
               priceField = gender === 'man' ? 'premiumMale' : 'premiumFemale';
-              console.log(range[0]);
+
               if (range[0] === 'over') {
                 rangeConditions.push({ [priceField]: { gte: price } });
                 filteringList.push(`보험료 ${price}이상`);

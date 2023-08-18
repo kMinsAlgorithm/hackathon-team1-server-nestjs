@@ -22,8 +22,8 @@ export enum Gender {
 }
 
 export enum RegistrationType {
-  Agent = '설계사 상담',
-  Online = '온라인가입',
+  Agent = 'agent',
+  Online = 'online',
   Mail = 'mail',
   Visit = 'visit',
 }
