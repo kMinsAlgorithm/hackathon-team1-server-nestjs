@@ -1,4 +1,7 @@
+import { IsString, MaxLength } from 'class-validator';
+
 export class InsuranceSuggesterDto {
-  'question': string;
+  @IsString()
+  @MaxLength(100, { message: '질문은 최대 100자 이내로 입력해주세요.' })
   'sourceLanguage': string;
 }
