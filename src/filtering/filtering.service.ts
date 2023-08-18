@@ -7,6 +7,7 @@ import {
   PriceRangeType,
   ValueType,
   InsuranaceType,
+  PriceMinMaxType,
 } from '../insurance-suggesters/interfaces/question-tagged.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { NumericalExistsStatus } from './interfaces/numerical-exists.interface';
@@ -23,6 +24,14 @@ export class FilteringService {
 
   private mapPriceRange(range: any[]): [PriceRangeType?, ValueType?] {
     const rangeType = Object.values(PriceRangeType).find(
+      (val) => val === range[0],
+    );
+    const valueType = Object.values(ValueType).find((val) => val === range[1]);
+    return [rangeType, valueType];
+  }
+
+  private mapMinMaxRange(range: any[]): [PriceMinMaxType?, ValueType?] {
+    const rangeType = Object.values(PriceMinMaxType).find(
       (val) => val === range[0],
     );
     const valueType = Object.values(ValueType).find((val) => val === range[1]);
@@ -55,6 +64,9 @@ export class FilteringService {
       insurancePriceRangeIndex: data['Insurance Price Range Index']
         ? data['Insurance Price Range Index'].map(this.mapPriceRange)
         : undefined,
+      insurancePriceMinMaxIndex: data['Insurance Price MinMax Index']
+        ? data['Insurance Price MinMax Index'].map(this.mapMinMaxRange)
+        : undefined,
       insuranceType: data['Insurance Type']
         ? InsuranaceType[data['Insurance Type'] as keyof typeof InsuranaceType]
         : undefined,
@@ -82,15 +94,13 @@ export class FilteringService {
     } = data;
     let where = {};
     const filteringList = [];
+    let priceField = 'premiumFemale';
+    console.log(data);
     const numerical_exists = {
       insurancePrice: NumericalExistsStatus.None,
       priceIndex: NumericalExistsStatus.None,
       age: NumericalExistsStatus.None,
     };
-    if (!gender) {
-      const genderNone = 'none';
-    }
-    const priceField = gender === 'man' ? 'premiumMale' : 'premiumFemale';
 
     if (age) {
       numerical_exists['age'] = NumericalExistsStatus.NoneChecked;
@@ -132,23 +142,24 @@ export class FilteringService {
         if (!range[1]) continue;
         switch (range[1]) {
           case 'price':
-            const priceField =
-              gender === 'man' ? 'premiumMale' : 'premiumFemale';
-
-            if (range[0] === 'over') {
-              rangeConditions.push({ [priceField]: { gte: price } });
-              filteringList.push(`: ${gender} 보험료 ${price}이상`);
-            } else if (range[0] === 'less') {
-              rangeConditions.push({ [priceField]: { lte: price } });
-              filteringList.push(`: ${gender} 보험료 ${price}이하`);
-            } else if (range[0] === 'around') {
-              rangeConditions.push({
-                [priceField]: { gte: price - 5000, lte: price + 5000 },
-              });
-              filteringList.push(`: ${gender} 보험료 ${price}대`);
+            if (gender) {
+              priceField = gender === 'man' ? 'premiumMale' : 'premiumFemale';
+              console.log(range[0]);
+              if (range[0] === 'over') {
+                rangeConditions.push({ [priceField]: { gte: price } });
+                filteringList.push(`보험료 ${price}이상`);
+              } else if (range[0] === 'less') {
+                rangeConditions.push({ [priceField]: { lte: price } });
+                filteringList.push(`보험료 ${price}이하`);
+              } else if (range[0] === 'around') {
+                rangeConditions.push({
+                  [priceField]: { gte: price - 2000, lte: price + 2000 },
+                });
+              }
+              numerical_exists['insurancePrice'] =
+                NumericalExistsStatus.Checked;
             }
-            numerical_exists['insurancePrice'] = NumericalExistsStatus.Checked;
-            break;
+            break; // 'break'를 추가해서 이 case 블록이 종료된 후 다른 case로 넘어가지 않도록 합니다.
 
           case 'age':
             if (range[0] === 'over') {
@@ -159,7 +170,7 @@ export class FilteringService {
               filteringList.push(`나이 ${age}이하`);
             } else if (range[0] === 'around') {
               rangeConditions.push({
-                insuranceAgeGroup: { gte: age - 5, lte: price + 5 },
+                insuranceAgeGroup: { gte: age - 5, lte: age + 5 },
               });
               filteringList.push(`나이 ${age}대`);
             }
@@ -177,17 +188,15 @@ export class FilteringService {
               rangeConditions.push({
                 priceIndex: { gte: priceIndex - 5, lte: priceIndex + 5 },
               });
-              filteringList.push(`보험 가입 지수: ${priceIndex}대`);
             }
             numerical_exists['priceIndex'] = NumericalExistsStatus.Checked;
             break;
         }
       }
-
       if (rangeConditions.length) {
         where = {
           ...where,
-          OR: rangeConditions,
+          AND: rangeConditions,
         };
       }
     }
@@ -195,59 +204,58 @@ export class FilteringService {
     // 5. 최대 최소 범위 지정
     if (insurancePriceMinMaxIndex) {
       const minMaxConditions = [];
-
       for (const range of insurancePriceMinMaxIndex) {
         if (!range[1]) continue;
 
         switch (range[1]) {
           case 'price':
-            if (range[0] === 'max') {
-              minMaxConditions.push({ [priceField]: { lte: price } });
-              filteringList.push(`가격이 최대 ${price}`);
-            } else if (range[0] === 'min') {
-              minMaxConditions.push({ [priceField]: { gte: price } });
-              filteringList.push(`가격이 최소 ${price}`);
-            } else if (range[0] === 'mid') {
-              minMaxConditions.push({
-                [priceField]: {
-                  gte: price - price * 0.1,
-                  lte: price + price * 0.1,
-                },
-              });
-              filteringList.push(`중간 가격`);
+            if (gender) {
+              priceField = gender === 'man' ? 'premiumMale' : 'premiumFemale';
+              console.log(range[0]);
+              if (range[0] === 'max') {
+                minMaxConditions.push({ [priceField]: { gte: price } });
+                filteringList.push(`최대 보험료 ${price}`);
+              } else if (range[0] === 'min') {
+                minMaxConditions.push({ [priceField]: { lte: price } });
+                filteringList.push(`최소 보험료 ${price}`);
+              } else if (range[0] === 'mid') {
+                minMaxConditions.push({
+                  [priceField]: { gte: price - 2000, lte: price + 2000 },
+                });
+              }
+              numerical_exists['insurancePrice'] =
+                NumericalExistsStatus.Checked;
             }
-            numerical_exists['price'] = NumericalExistsStatus.Checked;
-            break;
+            break; // 'break'를 추가해서 이 case 블록이 종료된 후 다른 case로 넘어가지 않도록 합니다.
 
           case 'age':
             if (range[0] === 'max') {
-              minMaxConditions.push({ insuranceAgeGroupEnd: { lte: age } });
-              filteringList.push(`나이가 최대 ${age}`);
+              minMaxConditions.push({ insuranceAgeGroup: { gte: age } });
+              filteringList.push(`나이 최대${age}`);
             } else if (range[0] === 'min') {
-              minMaxConditions.push({ insuranceAgeGroupStart: { gte: age } });
-              filteringList.push(`나이가 최소 ${age}`);
+              minMaxConditions.push({ insuranceAgeGroup: { lte: age } });
+              filteringList.push(`나이 최소 ${age}`);
             } else if (range[0] === 'mid') {
               minMaxConditions.push({
-                insuranceAgeGroupStart: { gte: age - 1 },
-                insuranceAgeGroupEnd: { lte: age + 1 },
+                insuranceAgeGroup: { gte: age - 10, lte: age + 10 },
               });
-              filteringList.push(`중간 나이대`);
+              filteringList.push(`나이 중반 ${age}`);
             }
             numerical_exists['age'] = NumericalExistsStatus.Checked;
             break;
 
           case 'priceIndex':
             if (range[0] === 'max') {
-              minMaxConditions.push({ priceIndex: { lte: priceIndex } });
-              filteringList.push(`보험 가격 지수 ${priceIndex}`);
-            } else if (range[0] === 'min') {
               minMaxConditions.push({ priceIndex: { gte: priceIndex } });
-              filteringList.push(`보험 가격 지수 ${priceIndex}`);
+              filteringList.push(`보험가입 지수: 최대 ${priceIndex}`);
+            } else if (range[0] === 'min') {
+              minMaxConditions.push({ priceIndex: { lte: priceIndex } });
+              filteringList.push(`보험 가입 지수: 최소 ${priceIndex}`);
             } else if (range[0] === 'mid') {
               minMaxConditions.push({
                 priceIndex: { gte: priceIndex - 5, lte: priceIndex + 5 },
               });
-              filteringList.push(`보험 가격지수 중반대`);
+              filteringList.push(`보험 가입 지수: 최소 ${priceIndex}`);
             }
             numerical_exists['priceIndex'] = NumericalExistsStatus.Checked;
             break;
@@ -257,7 +265,7 @@ export class FilteringService {
       if (minMaxConditions.length) {
         where = {
           ...where,
-          OR: minMaxConditions,
+          AND: minMaxConditions,
         };
       }
     }
@@ -285,11 +293,11 @@ export class FilteringService {
     ) {
       if (gender) {
         numericalConditions.push({
-          [priceField]: { gte: price - 5000, lte: price + 5000 },
+          [priceField]: { gte: price - 2000, lte: price + 2000 },
         });
       } else {
         numericalConditions.push({
-          premiumMale: { gte: price - 5000, lte: price + 5000 },
+          premiumFemale: { gte: price - 2000, lte: price + 2000 },
         });
       }
 
@@ -299,10 +307,11 @@ export class FilteringService {
     if (numericalConditions.length) {
       where = {
         ...where,
-        OR: numericalConditions,
+        AND: numericalConditions,
       };
     }
     const filtered = filteringList.join(', ');
+    console.log(filtered);
     const insuranceInfos = await this.prismaService.insuranceInfo.findMany({
       where: where,
       include: {

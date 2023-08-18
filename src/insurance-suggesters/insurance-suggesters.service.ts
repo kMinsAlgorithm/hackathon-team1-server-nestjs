@@ -67,7 +67,7 @@ export class InsuranceSuggestersService {
       );
       const insuranceTags =
         await this.filteringService.mapResponseToInsuranceType(response.data);
-
+      console.log(response.data);
       const { insuranceInfos, filtered } =
         await this.filteringService.filtering(insuranceTags);
 
